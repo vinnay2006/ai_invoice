@@ -12,7 +12,7 @@ for i in range(50):
         "vendor_id": f"V{i+1:03}",
         "bank_account": fake.bban()
      })
-for i in range(100):
+for i in range(1000):
     vendor = random.choice(vendors)
 
     vendor_name = vendor["vendor_name"]
