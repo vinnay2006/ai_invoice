@@ -92,3 +92,24 @@ df.to_csv(
     "data/raw/invoices_with_fraud.csv",
     index=False
 )
+
+#adding fake account number fraud   in record and setting as fraud
+bank_rows = clean_df.sample(
+    n=10,
+    random_state=5
+).copy()
+
+bank_rows["bank_account"] = (
+    bank_rows["bank_account"]
+    .astype(str)
+    + "999"
+)
+bank_rows["fraud"] = 1
+df = pd.concat(
+    [df, bank_rows],
+    ignore_index=True
+)
+df.to_csv(
+    "data/raw/invoices_with_fraud.csv",
+    index=False
+)
