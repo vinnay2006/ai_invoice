@@ -24,6 +24,7 @@ inflated_rows = clean_df.sample(
     n=10,
     random_state=1
 ).copy()
+
 inflated_rows["total_amount"] = (
     inflated_rows["total_amount"] * 3
 )
@@ -33,6 +34,31 @@ inflated_rows["tax_amount"] = (
 inflated_rows["fraud"] = 1
 df = pd.concat(
     [df, inflated_rows],
+    ignore_index=True
+)
+df.to_csv(
+    "data/raw/invoices_with_fraud.csv",
+    index=False
+)
+#adding vendor_name spooling in record and setting as fraud
+spoof_rows = clean_df.sample(
+    n=10,
+    random_state=3
+).copy()
+
+def spoof_vendor(name):
+    name = name.replace("o", "0")
+    name = name.replace("l", "1")
+    name = name.replace("i", "1")
+    return name
+
+spoof_rows["vendor_name"] = (
+    spoof_rows["vendor_name"]
+    .apply(spoof_vendor)
+)
+spoof_rows["fraud"] = 1
+df = pd.concat(
+    [df, spoof_rows],
     ignore_index=True
 )
 df.to_csv(
