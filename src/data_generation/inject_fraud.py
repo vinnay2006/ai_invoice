@@ -65,3 +65,30 @@ df.to_csv(
     "data/raw/invoices_with_fraud.csv",
     index=False
 )
+
+
+#adding threshold proximity error  in record and setting as fraud
+threshold_rows = clean_df.sample(
+    n=10,
+    random_state=4
+).copy()
+
+threshold_rows["total_amount"] = [
+    random.choice(
+        [99500, 99750, 99800, 99900, 99950]
+    )
+    for _ in range(len(threshold_rows))
+]
+
+threshold_rows["tax_amount"] = (
+    threshold_rows["total_amount"] * 0.18
+)
+threshold_rows["fraud"] = 1
+df = pd.concat(
+    [df, threshold_rows],
+    ignore_index=True
+)
+df.to_csv(
+    "data/raw/invoices_with_fraud.csv",
+    index=False
+)
