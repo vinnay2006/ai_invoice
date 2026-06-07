@@ -1,5 +1,5 @@
 import pandas as pd
-
+from rapidfuzz import fuzz
 df = pd.read_csv(
     "data/raw/invoices_with_fraud.csv"
 )
@@ -70,5 +70,100 @@ print(
 
 df.to_csv(
     "data/processed/features_v1.csv",
+    index=False
+)
+#checking the mean deviation in the total_amount from his average usual
+vendor_avg = (
+    df.groupby("vendor_name")["total_amount"]
+      .transform("mean")
+)
+
+df["price_deviation"] = (
+    (df["total_amount"] - vendor_avg)
+    / vendor_avg
+)
+print(
+    df["price_deviation"]
+    .describe()
+)
+
+#checking the new vendors for the first time
+df = df.sort_values(
+    "invoice_date"
+)
+df["is_new_vendor"] = (
+    df.groupby("vendor_name")
+      .cumcount()
+      .eq(0)
+      .astype(int)
+)
+print(
+    df["is_new_vendor"]
+    .value_counts()
+)
+#vendors who have changed the account name 
+previous_bank = (
+    df.groupby("vendor_name")
+      ["bank_account"]
+      .shift(1)
+)
+df["bank_account_changed"] = (
+    df["bank_account"] != previous_bank
+).astype(int)
+df.loc[
+    previous_bank.isna(),
+    "bank_account_changed"
+] = 0
+
+print(
+    df["bank_account_changed"]
+    .value_counts()
+)
+#checking the invoice sequence _gap
+df["invoice_numeric"] = (
+    df["invoice_number"]
+    .str.extract(r"(\d+)")
+    .astype(int)
+)
+previous_invoice = (
+    df.groupby("vendor_name")
+      ["invoice_numeric"]
+      .shift(1)
+)
+df["invoice_sequence_gap"] = (
+    df["invoice_numeric"]
+    - previous_invoice
+)
+df["invoice_sequence_gap"] = (
+    df["invoice_sequence_gap"]
+    .fillna(0)
+)
+print(
+    df["invoice_sequence_gap"]
+    .describe()
+)
+#knowing the vendor name suimilarity
+approved_vendors = (
+    df["vendor_name"]
+    .unique()
+    .tolist()
+)
+def max_similarity(name):
+    return max(
+        fuzz.ratio(name, vendor)
+        for vendor in approved_vendors
+    )
+
+df["vendor_name_similarity"] = (
+df["vendor_name"]
+.apply(max_similarity)
+)
+
+print(
+    df["vendor_name_similarity"]
+    .describe()
+)
+df.to_csv(
+    "data/processed/features_v2.csv",
     index=False
 )
