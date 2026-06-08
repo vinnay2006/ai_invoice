@@ -77,6 +77,7 @@ xgb_model.fit(
 )
 y_pred = xgb_model.predict(X_test)
 
+
 y_prob = xgb_model.predict_proba(X_test)[:,1]
 
 from sklearn.metrics import (
