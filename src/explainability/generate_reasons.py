@@ -1,7 +1,5 @@
-import pandas as pd
 import joblib
 import shap
-import numpy as np
 
 reason_map = {
     "bank_account_changed":
@@ -26,75 +24,52 @@ reason_map = {
         "Amount is close to approval threshold"
 }
 
-
 xgb_model = joblib.load(
     "models/xgboost_model.pkl"
 )
 
-df = pd.read_csv(
-    "data/processed/features_v2.csv"
-)
 
-drop_cols = [
-    "vendor_name",
-    "vendor_id",
-    "invoice_number",
-    "invoice_date",
-    "due_date",
-    "bank_account",
-    "department",
-    "approver_name",
-    "fraud"
-]
+def get_reasons_for_uploaded_data(X):
 
-X = df.drop(columns=drop_cols)
-
-explainer = shap.TreeExplainer(
-    xgb_model
-)
-
-shap_values = explainer.shap_values(X)
-
-def get_top_reasons(invoice_idx):
-
-    shap_row = shap_values[invoice_idx]
-
-    positive_features = []
-
-    for i, value in enumerate(shap_row):
-
-        if value > 0:
-
-            positive_features.append(
-                (X.columns[i], value)
-            )
-
-    positive_features.sort(
-        key=lambda x: x[1],
-        reverse=True
+    explainer = shap.TreeExplainer(
+        xgb_model
     )
 
-    reasons = []
+    shap_values = explainer.shap_values(X)
 
-    for feature, value in positive_features[:3]:
+    all_reasons = []
 
-        if feature in reason_map:
+    for row_idx in range(len(X)):
 
-            reasons.append(
-                reason_map[feature]
-            )
+        shap_row = shap_values[row_idx]
 
-        else:
+        positive_features = []
 
-            reasons.append(feature)
+        for col_idx, value in enumerate(shap_row):
 
-    return reasons
+            if value > 0:
 
-invoice_idx = 1
+                positive_features.append(
+                    (X.columns[col_idx], value)
+                )
 
-reasons = get_top_reasons(invoice_idx)
+        positive_features.sort(
+            key=lambda x: x[1],
+            reverse=True
+        )
 
-print("\nFraud Reasons:\n")
+        reasons = []
 
-for reason in reasons:
-    print("-", reason)
+        for feature, value in positive_features[:3]:
+
+            if feature in reason_map:
+
+                reasons.append(
+                    reason_map[feature]
+                )
+
+        all_reasons.append(
+            " | ".join(reasons)
+        )
+
+    return all_reasons

@@ -28,6 +28,30 @@ if uploaded_file:
 
     result_df = predict_invoices(df)
 
+    flagged = result_df[
+        result_df["status"] == "FLAGGED"
+    ]
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
+        "Total Invoices",
+        len(result_df)
+    )
+
+    col2.metric(
+        "Flagged",
+        len(flagged)
+    )
+
+    col3.metric(
+        "Flag Rate (%)",
+        round(
+            len(flagged) / len(result_df) * 100,
+            2
+        )
+    ) 
+
     st.write("Results")
 
     st.dataframe(
@@ -53,3 +77,40 @@ if uploaded_file:
         ]
     ]
 )
+
+#risky vendor whse invoices occur more frequently in flagged cases
+    st.subheader("Top Risky Vendors")
+
+    vendor_counts = (
+        flagged["vendor_name"]
+        .value_counts()
+        .head(10)
+    )
+
+    st.dataframe(vendor_counts)
+    
+    #now see the nice analyis using a chart
+    import matplotlib.pyplot as plt
+    st.subheader("Risk Score Distribution")
+
+fig, ax = plt.subplots()
+
+ax.hist(
+    result_df["risk_score"],
+    bins=20
+)
+
+st.pyplot(fig)
+
+#graph for fraud vendor names st.subheader("Top Risky Vendors Chart")
+
+st.subheader("Top Risky Vendors Chart")
+
+fig, ax = plt.subplots()
+
+vendor_counts.plot(
+    kind="bar",
+    ax=ax
+)
+
+st.pyplot(fig)

@@ -2,6 +2,9 @@ import joblib
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
+from src.explainability.generate_reasons import (
+    get_reasons_for_uploaded_data
+)
 xgb_model = joblib.load(
     "models/xgboost_model.pkl"
 )
@@ -49,9 +52,13 @@ def predict_invoices(df):
         "FLAGGED",
         "APPROVED"
     )
+    df["reasons"] = get_reasons_for_uploaded_data(X)
     print("\nStatus Counts:")
     print(df["status"].value_counts())
 
     print("\nRisk Score Summary:")
     print(df["risk_score"].describe())
+
+    print(df[["risk_score", "status", "reasons"]].head())
     return df
+print("predict.py loaded successfully")
