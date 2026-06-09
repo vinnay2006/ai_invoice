@@ -27,6 +27,7 @@ if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
     result_df = predict_invoices(df)
+    st.session_state["results"] = result_df
     st.write(result_df.columns.tolist())
     flagged = result_df[
         result_df["status"] == "FLAGGED"
@@ -79,57 +80,29 @@ if uploaded_file:
     ]
 )
 
-st.subheader("Flagged Invoice Reasons")
+    st.subheader("Flagged Invoice Reasons")
 
-for _, row in flagged.head(10).iterrows():
+    for _, row in flagged.head(10).iterrows():
 
-    st.write(
-        f"Invoice: {row['invoice_number']}"
+        st.write(
+            f"Invoice: {row['invoice_number']}"
+        )
+
+        st.write(
+            f"Risk Score: {row['risk_score']:.2f}"
+        )
+
+        st.write("Reasons:")
+
+        for reason in row["reasons"].split("|"):
+            st.write(f"• {reason.strip()}")
+
+        st.divider()
+    csv = result_df.to_csv(index=False)
+
+    st.download_button(
+        label="Download Results",
+        data=csv,
+        file_name="fraud_analysis_results.csv",
+        mime="text/csv"
     )
-
-    st.write(
-        f"Risk Score: {row['risk_score']:.2f}"
-    )
-
-    st.write("Reasons:")
-
-    for reason in row["reasons"].split("|"):
-        st.write(f"• {reason.strip()}")
-
-    st.divider()
-#risky vendor whse invoices occur more frequently in flagged cases
-st.subheader("Top Risky Vendors")
-
-vendor_counts = (
-    flagged["vendor_name"]
-    .value_counts()
-    .head(10)
-)
-
-st.dataframe(vendor_counts)
-
-#now see the nice analyis using a chart
-import matplotlib.pyplot as plt
-st.subheader("Risk Score Distribution")
-
-fig, ax = plt.subplots()
-
-ax.hist(
-    result_df["risk_score"],
-    bins=20
-)
-
-st.pyplot(fig)
-
-#graph for fraud vendor names st.subheader("Top Risky Vendors Chart")
-
-st.subheader("Top Risky Vendors Chart")
-
-fig, ax = plt.subplots()
-
-vendor_counts.plot(
-    kind="bar",
-    ax=ax
-)
-
-st.pyplot(fig)

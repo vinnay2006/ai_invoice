@@ -60,5 +60,22 @@ def predict_invoices(df):
     print(df["risk_score"].describe())
 
     print(df[["risk_score", "status", "reasons"]].head())
+
+    def risk_band(score):
+
+        if score >= 70:
+
+            return "High"
+
+        elif score >= 40:
+
+            return "Medium"
+
+        return "Low"
+    df["risk_band"] = (
+        df["risk_score"]
+        .apply(risk_band)
+    )
+
     return df
 print("predict.py loaded successfully")
