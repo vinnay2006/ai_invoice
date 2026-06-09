@@ -11,6 +11,7 @@ if "results" not in st.session_state:
     st.stop()
 
 result_df = st.session_state["results"]
+st.write(result_df.columns.tolist())
 
 flagged = result_df[
     result_df["status"] == "FLAGGED"
